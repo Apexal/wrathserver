@@ -5,6 +5,6 @@ load_dotenv()
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route("/")
 def index():
-    return 'hello world'
+    return "hello world"
