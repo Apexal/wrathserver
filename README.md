@@ -24,3 +24,10 @@ $ flask run
 ```
 
 Navigate to `http://localhost:5000/` or whatever Flask in the terminal directs you to.
+
+## Running Tests
+
+```bash
+$ poetry shell
+$ pytest .
+```
