@@ -1,6 +1,6 @@
 # Wrathserver
 
-A Flask server for facilitating the creation of characters for Wrathskeller.
+A REST API and websocket server for facilitating the creation of characters for Wrathskeller.
 
 ## Planned Features
 
@@ -20,10 +20,10 @@ A Flask server for facilitating the creation of characters for Wrathskeller.
 
 ```bash
 $ poetry shell
-$ flask run
+$ uvicorn main:app --reload
 ```
 
-Navigate to `http://localhost:5000/` or whatever Flask in the terminal directs you to.
+Navigate to `http://localhost:8000/docs` to view the OpenAPI dashboard.
 
 ## Running Tests
 
