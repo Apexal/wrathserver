@@ -6,9 +6,10 @@ authors = ["Frank Matranga <thefrankmatranga@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.11"
 python-dotenv = "^0.19.2"
-fastapi = "^0.75.0"
+fastapi = "^0.72.0"
+rembg = "^2.0.10"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.1.0", allow-prereleases = true}
