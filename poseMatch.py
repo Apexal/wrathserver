@@ -1,19 +1,51 @@
 import cv2
+from imageio import save
 import numpy as np
 from turtle import pos
 from PIL import Image, ImageDraw, ImageFilter
 
+
+def turnWhite(imageName, newName):
+    img = Image.open(imageName+'.png')
+    img = img.convert("RGBA")
+    datas = img.getdata()
+
+    newData = []
+    for item in datas:
+        if item[3]!=0:
+            newData.append((255, 255, 255, 255))
+        else:
+            newData.append(item)
+
+    img.putdata(newData)
+    img.save(newName+".png", "PNG") 
+
+def countBlackPixel(imageName):
+    img= Image.open(imageName+".png")
+    img=img.convert("RGBA")
+    datas=img.getdata()
+
+    blackCount=0
+    for item in datas:
+        if(item[0]==0 and item[1]==0 and item[2]==0):
+            blackCount+=1
+    img.close()   
+    return blackCount   
+
+
+'''
+Given 2 400x400 Pixel pictures the move will be masked onto the move
+'''
 person="images\output-resized.png"
 pose="poses\light_punch\light_punch_pose_frame_0.png"
 
 imPerson=Image.open(person)
 imPose=Image.open(pose)
 
-#poseWidth, poseHeight = imPose.size
-#personWidth, personHight = imPerson.size
-
-imPose.paste(imPerson,(0,0),imPerson)
-imPose.save("fit.png", quality=95)
+imPerson2=imPerson.copy()
+temp=imPose.copy()
+temp.paste(imPerson,(0,0),imPerson)
+temp.save("fit.png", quality=95)
 
 image = cv2.imread(person)
 print("person: "+str(np.sum(image == 0)))
@@ -49,4 +81,97 @@ pose
 fit
 person
 '''
-#count = cv2.countNonZero(image)
+
+
+
+#(Left,Top,Right,Bottom)
+'''imPerson2=imPerson2.crop((5,5,395,395))
+imPerson2=imPerson2.resize((400,400))
+imPerson2=imPerson2.crop((5,5,395,395))
+imPerson2=imPerson2.resize((400,400))
+imPerson2=imPerson2.crop((5,5,395,395))
+imPerson2=imPerson2.resize((400,400))'''
+imPerson2.save("test.png",quality=95)
+turnWhite("test","testW")
+
+whiteChar=Image.open("testW.png")
+
+current=Image.open("green.png")
+greenControl=current.copy()
+
+current.paste(whiteChar,(0,0),imPose)
+current.save("fit2.png", quality=95)
+current.save("fit3.png", quality=95)
+
+"""
+current=greenControl
+current.save("fit2.png", quality=95)
+"""
+
+print(countBlackPixel("fit2"))
+direction=0
+lastCount=countBlackPixel("fit2")
+
+#check if or image is completely in shadow
+#(Left,Top,Right,Bottom)
+stuck=0
+while(countBlackPixel("fit3")>0):
+    print(countBlackPixel("fit3"))
+    imgKeep=current.copy()
+    personKeep=imPerson2.copy()
+    current=greenControl
+    if(direction==0):
+        #Top
+        direction+=1
+        whiteChar=whiteChar.crop((0,2,400,400))
+        whiteChar=whiteChar.resize((400,400))
+        imPerson2=imPerson2.crop((0,2,400,400))
+        imPerson2=imPerson2.resize((400,400))
+        current.paste(whiteChar,(0,0),imPose)
+        current.save("fitNew.png",quality=95)
+    elif(direction==1):
+        #Right
+        direction+=1
+        whiteChar=whiteChar.crop((0,0,398,400))
+        whiteChar=whiteChar.resize((400,400))
+        imPerson2=imPerson2.crop((0,0,398,400))
+        imPerson2=imPerson2.resize((400,400))
+        current.paste(whiteChar,(0,0),imPose)
+        current.save("fitNew.png",quality=95)
+    elif(direction==2):
+        #Bottom
+        direction+=1
+        whiteChar=whiteChar.crop((0,0,400,398))
+        whiteChar=whiteChar.resize((400,400))
+        imPerson2=imPerson2.crop((0,0,398,400))
+        imPerson2=imPerson2.resize((400,400))
+        current.paste(whiteChar,(0,0),imPose)
+        current.save("fitNew.png",quality=95)
+    else:
+        #Left
+        direction=0
+        whiteChar=whiteChar.crop((2,0,400,400))
+        whiteChar=whiteChar.resize((400,400))
+        imPerson2=imPerson2.crop((0,0,398,400))
+        imPerson2=imPerson2.resize((400,400))
+        current.paste(whiteChar,(0,0),imPose)
+        current.save("fitNew.png",quality=95)
+    
+    if(countBlackPixel("fit3")>countBlackPixel("fitNew")):
+        current.save("fit3.png",quality=95)
+        stuck=0
+    else:
+        current=imgKeep
+        imPerson2=personKeep
+        stuck+=1
+        if(stuck>=5):
+            break
+    
+current=greenControl
+current.paste(imPerson2,(0,0),imPose)
+current.save("fitNew.png",quality=95)
+
+
+
+
+
