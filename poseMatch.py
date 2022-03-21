@@ -54,7 +54,7 @@ def personPoseValid(person, pose):
 
     #add process to move picture to improve accuracy/allow it to pass
     print("person")
-    blackPixels_on_person=countBlackPixel("test.png")
+    blackPixels_on_person=countBlackPixel(person)
     print(blackPixels_on_person)
     print("pose")
     blackPixels_on_pose=countBlackPixel(pose)
@@ -75,7 +75,7 @@ def personPoseValid(person, pose):
         print("no")
         return -1, []
 
-personPoseValid("images\output-resized.png","poses\light_punch\light_punch_pose_frame_0.png")
+#personPoseValid("images\output-resized.png","poses\light_punch\light_punch_pose_frame_0.png")
 #image = cv2.imread(pose)
 #print("pose: "+str(np.sum(image == 0)))
 #print("total: "+str(np.sum(image)))
