@@ -6,4 +6,5 @@ output_path = 'images/output.png'
 
 input = Image.open(input_path)
 output = remove(input)
+#reformate to 400x400 and make sure oriantation is correct
 output.save(output_path)
