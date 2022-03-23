@@ -20,7 +20,7 @@ A REST API and websocket server for facilitating the creation of characters for 
 
 ```bash
 $ poetry shell
-$ uvicorn main:app --reload
+$ uvicorn api.main:app --reload
 ```
 
 Navigate to `http://localhost:8000/docs` to view the OpenAPI dashboard.

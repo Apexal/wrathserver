@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Path, WebSocket, WebSocketDisconnect, status
-from fastapi.testclient import TestClient
+from fastapi import FastAPI, Path, WebSocket, status
+
+from api.removeBackground import remove_background
+from api.utils import b64_to_bytes, b64_to_image, bytes_to_b64
 
 app = FastAPI(
     title="Wrathserver",
@@ -42,7 +44,7 @@ async def websocket_endpoint(websocket: WebSocket):
         try:
             message = await websocket.receive_json()
 
-            if not "type" in message or not "payload" in message:
+            if not "type" in message or not "data" in message:
                 await websocket.send_json({"error": "Invalid message format"})
 
             mtype, data = message["type"], message["data"]
@@ -56,22 +58,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 b64_png_image = message["data"]["base64EncodedImage"]
                 b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
 
+                image_bg_removed = remove_background_b64(b64_png_image)  # type: ignore
+
                 await websocket.send_json(
-                    {"poseMatchPercentage": 1, "base64EncodedImage": b64_png_image}
+                    {"poseMatchPercentage": 1, "base64EncodedImage": image_bg_removed}
                 )
         except Exception as e:
             print("websocket error", e)
             break
-
-
-# TESTS
-
-test_client = TestClient(app)
-
-
-def test_websocket():
-    test_client = TestClient(app)
-    with test_client.websocket_connect("/ws") as websocket:
-        websocket.send_json({"type": "audio", "data": {"base64EncodedAudio": ""}})
-        data = websocket.receive_json()
-        print(data)
