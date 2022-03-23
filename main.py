@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Path, WebSocket, status
+from fastapi import FastAPI, Path, WebSocket, WebSocketDisconnect, status
+from fastapi.testclient import TestClient
 
 app = FastAPI(
     title="Wrathserver",
@@ -38,22 +39,39 @@ async def get_character(
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
-        message = await websocket.receive_json()
+        try:
+            message = await websocket.receive_json()
 
-        if not "type" in message or not "payload" in message:
-            await websocket.send_json({"error": "Invalid message format"})
+            if not "type" in message or not "payload" in message:
+                await websocket.send_json({"error": "Invalid message format"})
 
-        mtype, data = message["type"], message["data"]
+            mtype, data = message["type"], message["data"]
 
-        # Check type
-        if mtype == "audio":
-            b64_mp3 = message["data"]["base64EncodedAudio"]
+            # Check type
+            if mtype == "audio":
+                b64_mp3 = message["data"]["base64EncodedAudio"]
 
-            await websocket.send_json({"base64EncodedAudio": b64_mp3})
-        elif mtype == "image-with-pose":
-            b64_png_image = message["data"]["base64EncodedImage"]
-            b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
+                await websocket.send_json({"base64EncodedAudio": b64_mp3})
+            elif mtype == "image-with-pose":
+                b64_png_image = message["data"]["base64EncodedImage"]
+                b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
 
-            await websocket.send_json(
-                {"poseMatchPercentage": 1, "base64EncodedImage": b64_png_image}
-            )
+                await websocket.send_json(
+                    {"poseMatchPercentage": 1, "base64EncodedImage": b64_png_image}
+                )
+        except Exception as e:
+            print("websocket error", e)
+            break
+
+
+# TESTS
+
+test_client = TestClient(app)
+
+
+def test_websocket():
+    test_client = TestClient(app)
+    with test_client.websocket_connect("/ws") as websocket:
+        websocket.send_json({"type": "audio", "data": {"base64EncodedAudio": ""}})
+        data = websocket.receive_json()
+        print(data)
