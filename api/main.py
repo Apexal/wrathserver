@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Path, WebSocket, status
+from api.normalizeAudio import normalize_mp3_b64
 from api.removeBackground import remove_background_b64
 
 app = FastAPI(
@@ -50,8 +51,9 @@ async def websocket_endpoint(websocket: WebSocket):
             # Check type
             if mtype == "audio":
                 b64_mp3 = message["data"]["base64EncodedAudio"]
+                normalized_mp3_b64 = normalize_mp3_b64(b64_mp3)
 
-                await websocket.send_json({"base64EncodedAudio": b64_mp3})
+                await websocket.send_json({"base64EncodedAudio": normalized_mp3_b64})
             elif mtype == "image-with-pose":
                 b64_png_image = message["data"]["base64EncodedImage"]
                 b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
