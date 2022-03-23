@@ -1,8 +1,54 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Path, WebSocket, status
 
-app = FastAPI()
+app = FastAPI(
+    title="Wrathserver",
+    description="REST API and WebSocket server to store, create, and serve characters from Wrathspriter to Wrathskeller.",
+    version="0.0.1",
+    contact={
+        "name": "Frank Matranga",
+        "url": "https://github.com/Apexal",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+)
 
 
-@app.get("/")
-async def root():
+@app.post("/characters/", tags=["characters"], status_code=status.HTTP_201_CREATED)
+async def save_character():
     return {"message": "Hello World"}
+
+
+@app.patch("/characters/{character_id}", tags=["characters"])
+async def update_character(
+    character_id: str = Path(..., title="The unique character code.")
+):
+    return {"character_id": character_id}
+
+
+@app.get("/characters/{character_id}", tags=["characters"])
+async def get_character(
+    character_id: str = Path(..., title="The unique character code.")
+):
+    return {"character_id": character_id}
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        message = await websocket.receive_json()
+
+        if not "type" in message or not "payload" in message:
+            await websocket.send_json({"error": "Invalid message format"})
+
+        mtype, data = message["type"], message["data"]
+
+        # Check type
+        if mtype == "audio":
+            pass
+        elif mtype == "image-with-pose":
+            pass
+
+        print(message)
