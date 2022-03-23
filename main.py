@@ -47,8 +47,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
         # Check type
         if mtype == "audio":
-            pass
-        elif mtype == "image-with-pose":
-            pass
+            b64_mp3 = message["data"]["base64EncodedAudio"]
 
-        print(message)
+            await websocket.send_json({"base64EncodedAudio": b64_mp3})
+        elif mtype == "image-with-pose":
+            b64_png_image = message["data"]["base64EncodedImage"]
+            b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
+
+            await websocket.send_json(
+                {"poseMatchPercentage": 1, "base64EncodedImage": b64_png_image}
+            )
