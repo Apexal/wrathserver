@@ -1,12 +1,10 @@
 from fastapi import FastAPI, Path, WebSocket, status
-
-from api.removeBackground import remove_background
-from api.utils import b64_to_bytes, b64_to_image, bytes_to_b64
+from api.removeBackground import remove_background_b64
 
 app = FastAPI(
     title="Wrathserver",
     description="REST API and WebSocket server to store, create, and serve characters from Wrathspriter to Wrathskeller.",
-    version="0.0.1",
+    version="0.0.2",
     contact={
         "name": "Frank Matranga",
         "url": "https://github.com/Apexal",
