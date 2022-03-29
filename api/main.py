@@ -51,34 +51,21 @@ class AudioBody(BaseModel):
     base64EncodedAudio: str
 
 
-@app.post("/audio", tags=["audio"])
+class ImageBody(BaseModel):
+    base64EncodedImage: str
+
+
+@app.post("/audio", tags=["process"])
 async def process_audio(body: AudioBody):
     normalized_mp3_b64 = normalize_mp3_b64(body.base64EncodedAudio)
     return AudioBody(base64EncodedAudio=normalized_mp3_b64)
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        try:
-            message = await websocket.receive_json()
+@app.post("/image", tags=["process"])
+async def process_image(body: ImageBody):
+    b64_png_image = body.base64EncodedImage
+    # b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
 
-            if not "type" in message or not "data" in message:
-                await websocket.send_json({"error": "Invalid message format"})
+    image_bg_removed = remove_background_b64(b64_png_image)  # type: ignore
 
-            mtype, data = message["type"], message["data"]
-
-            # Check type
-            if mtype == "image-with-pose":
-                b64_png_image = message["data"]["base64EncodedImage"]
-                b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
-
-                image_bg_removed = remove_background_b64(b64_png_image)  # type: ignore
-
-                await websocket.send_json(
-                    {"poseMatchPercentage": 1, "base64EncodedImage": image_bg_removed}
-                )
-        except Exception as e:
-            print("websocket error", e)
-            break
+    return ImageBody(base64EncodedImage=image_bg_removed)
