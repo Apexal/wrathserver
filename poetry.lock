@@ -446,6 +446,14 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "pydub"
+version = "0.25.1"
+description = "Manipulate audio with an simple and easy high level interface"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pymatting"
 version = "1.1.5"
 description = "Python package for alpha matting."
@@ -742,7 +750,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.8.13"
-content-hash = "f65f267fa7328ca006d68dc0a3ef9dfff125639d238adf79eaaa77dbc47c3d76"
+content-hash = "89073e512912b2d83e6bc0697db34106e3a2b00ba3c492820561de5cf6fb9257"
 
 [metadata.files]
 aiohttp = [
@@ -1285,6 +1293,10 @@ pydantic = [
     {file = "pydantic-1.9.0-cp39-cp39-win_amd64.whl", hash = "sha256:2cc6a4cb8a118ffec2ca5fcb47afbacb4f16d0ab8b7350ddea5e8ef7bcc53a16"},
     {file = "pydantic-1.9.0-py3-none-any.whl", hash = "sha256:085ca1de245782e9b46cefcf99deecc67d418737a1fd3f6a4f511344b613a5b3"},
     {file = "pydantic-1.9.0.tar.gz", hash = "sha256:742645059757a56ecd886faf4ed2441b9c0cd406079c2b4bee51bcc3fbcd510a"},
+]
+pydub = [
+    {file = "pydub-0.25.1-py2.py3-none-any.whl", hash = "sha256:65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6"},
+    {file = "pydub-0.25.1.tar.gz", hash = "sha256:980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f"},
 ]
 pymatting = [
     {file = "PyMatting-1.1.5-py3-none-any.whl", hash = "sha256:053fd112702723031b9478efd6c6233351d851d88a1ddfd6b56a785b870c6297"},
