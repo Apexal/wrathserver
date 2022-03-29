@@ -6,7 +6,7 @@ authors = ["Frank Matranga <thefrankmatranga@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = "3.8"
 python-dotenv = "^0.19.2"
 fastapi = "^0.72.0"
 rembg = "^2.0.10"
