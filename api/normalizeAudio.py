@@ -1,5 +1,5 @@
 import base64
-from io import BytesIO
+from io import BytesIO, StringIO
 from pydub import AudioSegment
 
 
@@ -9,7 +9,7 @@ def match_target_amplitude(sound, target_dBFS: float):
 
 
 def normalize_mp3_bytes(mp3_bytes: bytes) -> bytes:
-    input = AudioSegment.from_raw(mp3_bytes)
+    input = AudioSegment.from_mp3(BytesIO(mp3_bytes))
     normalized_sound = match_target_amplitude(input, -20.0)
     buf = BytesIO()
     normalized_sound.export(buf, format="mp3")
