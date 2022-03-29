@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 app = FastAPI(
     title="Wrathserver",
-    description="REST API and WebSocket server to store, create, and serve characters from Wrathspriter to Wrathskeller.",
+    description="REST API to store, create, and serve characters from Wrathspriter to Wrathskeller.",
     version="0.0.2",
     contact={
         "name": "Frank Matranga",

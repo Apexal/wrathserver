@@ -1,13 +1,16 @@
 # Wrathserver
 
-A REST API and websocket server for facilitating the creation of characters for Wrathskeller.
+A REST API for facilitating the creation of characters for Wrathskeller.
 
 ## Planned Features
 
 - [ ] Store characters from Wrathspriter
 - [ ] Retrieve characters from Wrathskeller
-- [ ] Remove image backgrounds using machine learning
+- [x] Remove image backgrounds using machine learning
 - [ ] Check match between proposed image and template image
+- [x] Normalize audio volume
+- [ ] Lessen audio background noise
+- [ ] Trim audio silence
 
 ## Setup
 
