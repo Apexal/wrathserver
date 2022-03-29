@@ -1,6 +1,9 @@
 from fastapi import FastAPI, Path, WebSocket, status
+from fastapi.middleware.cors import CORSMiddleware
 from api.normalizeAudio import normalize_mp3_b64
 from api.removeBackground import remove_background_b64
+from pydantic import BaseModel
+
 
 app = FastAPI(
     title="Wrathserver",
@@ -14,6 +17,14 @@ app = FastAPI(
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT",
     },
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -36,6 +47,16 @@ async def get_character(
     return {"character_id": character_id}
 
 
+class AudioBody(BaseModel):
+    base64EncodedAudio: str
+
+
+@app.post("/audio", tags=["audio"])
+async def process_audio(body: AudioBody):
+    normalized_mp3_b64 = normalize_mp3_b64(body.base64EncodedAudio)
+    return AudioBody(base64EncodedAudio=normalized_mp3_b64)
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -49,12 +70,7 @@ async def websocket_endpoint(websocket: WebSocket):
             mtype, data = message["type"], message["data"]
 
             # Check type
-            if mtype == "audio":
-                b64_mp3 = message["data"]["base64EncodedAudio"]
-                normalized_mp3_b64 = normalize_mp3_b64(b64_mp3)
-
-                await websocket.send_json({"base64EncodedAudio": normalized_mp3_b64})
-            elif mtype == "image-with-pose":
+            if mtype == "image-with-pose":
                 b64_png_image = message["data"]["base64EncodedImage"]
                 b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
 
