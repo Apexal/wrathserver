@@ -63,9 +63,9 @@ async def process_audio(body: AudioBody):
 
 @app.post("/image", tags=["process"])
 async def process_image(body: ImageBody):
-    b64_png_image = body.base64EncodedImage
-    # b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
+    b64_image = body.base64EncodedImage
+    # b64_pose_image = body.base64EncodedPoseImage
 
-    image_bg_removed = remove_bg_and_resize_b64(b64_png_image)  # type: ignore
+    png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
 
-    return ImageBody(base64EncodedImage=image_bg_removed)
+    return ImageBody(base64EncodedImage=png_image_bg_removed_b64)
