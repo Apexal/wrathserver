@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Path, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from api.normalizeAudio import normalize_mp3_b64
-from api.removeBackground import remove_background_b64
+from api.removeBackground import remove_bg_and_resize_b64
 from pydantic import BaseModel
 
 
@@ -66,6 +66,6 @@ async def process_image(body: ImageBody):
     b64_png_image = body.base64EncodedImage
     # b64_png_pose_image = message["data"]["base64EncodedPoseImage"]
 
-    image_bg_removed = remove_background_b64(b64_png_image)  # type: ignore
+    image_bg_removed = remove_bg_and_resize_b64(b64_png_image)  # type: ignore
 
     return ImageBody(base64EncodedImage=image_bg_removed)
