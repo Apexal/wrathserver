@@ -30,6 +30,8 @@ Navigate to `http://localhost:8000/docs` to view the OpenAPI dashboard.
 
 ## Running Tests
 
+Write tests under `api/tests` in files that start with `test_`. Simply write functions that start with `test_` and they will be run when you run the commands below.
+
 ```bash
 $ poetry shell
 $ pytest .
