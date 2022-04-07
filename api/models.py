@@ -33,7 +33,7 @@ class PoseAngle(BaseModel):
 
 class AnimationFrame(BaseModel):
     base64EncodedImage: str
-    pose: List[PoseAngle]
+    pose: Optional[List[PoseAngle]]
     hitCollider: HitCollider
     bodyCollider: BodyCollider
     durationInS: float
@@ -53,6 +53,27 @@ class SchoolProgram(BaseModel):
     actionTemplates: List[CharacterAction]
 
 
+class StateSoundEffects(BaseModel):
+    hurt: List[SoundEffect]
+    enter: List[SoundEffect]
+    win: List[SoundEffect]
+    lose: List[SoundEffect]
+
+
+class StateAnimations(BaseModel):
+    idle: List[AnimationFrame]
+    enter: List[AnimationFrame]
+    walk: List[AnimationFrame]
+    dash: List[AnimationFrame]
+    jump: List[AnimationFrame]
+    crouch: List[AnimationFrame]
+    block: List[AnimationFrame]
+    grappled: List[AnimationFrame]
+    hurt: List[AnimationFrame]
+    win: List[AnimationFrame]
+    lose: List[AnimationFrame]
+
+
 class CharacterBase(BaseModel):
     """Based on https://github.com/Apexal/wrathspriter/blob/master/src/interfaces/character.ts"""
 
@@ -61,6 +82,8 @@ class CharacterBase(BaseModel):
     actions: List[CharacterAction]
     major: SchoolProgram
     minor: Optional[SchoolProgram]
+    stateSoundEffects: StateSoundEffects
+    stateAnimations: StateAnimations
 
 
 class CharacterOut(CharacterBase):
