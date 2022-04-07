@@ -1,15 +1,15 @@
-from fastapi import FastAPI, HTTPException, Path, WebSocket, status
+import json
+from fastapi import FastAPI, HTTPException, Path, status
 from fastapi.middleware.cors import CORSMiddleware
 from api.db import fetch_character, initialize_redis_pool, store_character
-from api.normalizeAudio import normalize_mp3_b64
 from api.removeBackground import remove_bg_and_resize_b64
-from pydantic import BaseModel
-
+from api.normalizeAudio import normalize_mp3_b64
+from api.models import *
 
 app = FastAPI(
     title="Wrathserver",
     description="REST API to store, create, and serve characters from Wrathspriter to Wrathskeller.",
-    version="0.0.2",
+    version="0.0.3",
     contact={
         "name": "Frank Matranga",
         "url": "https://github.com/Apexal",
@@ -42,8 +42,8 @@ async def shutdown_event():
 
 
 @app.post("/characters/", tags=["characters"], status_code=status.HTTP_201_CREATED)
-async def save_character():
-    return await store_character(app.state.redis, "ABCD", {})
+async def save_character(character: Character):
+    return await store_character(app.state.redis, "ABCD", character)
 
 
 @app.patch("/characters/{character_id}", tags=["characters"])
@@ -53,7 +53,7 @@ async def update_character(
     return {"character_id": character_id}
 
 
-@app.get("/characters/{character_id}", tags=["characters"])
+@app.get("/characters/{character_id}", tags=["characters"], response_model=Character)
 async def get_character(
     character_id: str = Path(..., title="The unique character code.")
 ):
@@ -63,14 +63,6 @@ async def get_character(
         return character
     else:
         raise HTTPException(status_code=404, detail="Character not found")
-
-
-class AudioBody(BaseModel):
-    base64EncodedAudio: str
-
-
-class ImageBody(BaseModel):
-    base64EncodedImage: str
 
 
 @app.post("/audio", tags=["process"])
