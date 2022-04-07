@@ -33,12 +33,13 @@ async def store_character(
     redis: Redis, key: str, character: CharacterBase
 ) -> CharacterOut:
     stored_character = CharacterOut(id=key, **character.dict())
-    await redis.hset("characters", key, json.dumps(stored_character.dict()))
+    await redis.set("character:" + key, json.dumps(stored_character.dict()))
+    await redis.expire("character:" + key, 60 * 5)  # Remove after 5 minutes
     return stored_character
 
 
 async def fetch_character(redis: Redis, key: str) -> Optional[CharacterOut]:
-    character_json = await redis.hget("characters", key)
+    character_json = await redis.get("character:" + key)
     if not character_json:
         return None
     return CharacterOut(**json.loads(character_json))
