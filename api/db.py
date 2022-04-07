@@ -29,13 +29,16 @@ async def generate_new_character_id(redis: Redis):
     return id
 
 
-async def store_character(redis: Redis, key: str, character: CharacterBase):
-    await redis.hset("characters", key, json.dumps(character.dict()))
-    return character
+async def store_character(
+    redis: Redis, key: str, character: CharacterBase
+) -> CharacterOut:
+    stored_character = CharacterOut(id=key, **character.dict())
+    await redis.hset("characters", key, json.dumps(stored_character.dict()))
+    return stored_character
 
 
 async def fetch_character(redis: Redis, key: str) -> Optional[CharacterOut]:
     character_json = await redis.hget("characters", key)
-    if character_json:
+    if not character_json:
         return None
-    return CharacterOut(**character_json)
+    return CharacterOut(**json.loads(character_json))

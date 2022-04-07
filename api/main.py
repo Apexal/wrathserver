@@ -62,6 +62,7 @@ async def save_character(character: CharacterBase):
     saved_character = await store_character(
         app.state.redis, new_character_id, character
     )
+
     return saved_character
 
 

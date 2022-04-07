@@ -60,7 +60,7 @@ class CharacterBase(BaseModel):
     backstory: str
     actions: List[CharacterAction]
     major: SchoolProgram
-    minor: SchoolProgram
+    minor: Optional[SchoolProgram]
 
 
 class CharacterOut(CharacterBase):
