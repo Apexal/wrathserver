@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Path, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
+from api.db import initialize_redis_pool
 from api.normalizeAudio import normalize_mp3_b64
 from api.removeBackground import remove_bg_and_resize_b64
 from pydantic import BaseModel
@@ -26,6 +27,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.redis = await initialize_redis_pool()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await app.state.redis.close()
 
 
 @app.post("/characters/", tags=["characters"], status_code=status.HTTP_201_CREATED)
