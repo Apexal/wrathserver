@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Path, WebSocket, status
+from fastapi import FastAPI, HTTPException, Path, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
-from api.db import initialize_redis_pool
+from api.db import fetch_character, initialize_redis_pool, store_character
 from api.normalizeAudio import normalize_mp3_b64
 from api.removeBackground import remove_bg_and_resize_b64
 from pydantic import BaseModel
@@ -31,17 +31,19 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    """On app startup, connect to the Redis server."""
     app.state.redis = await initialize_redis_pool()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    """On app shutdown, close the connectiong to Redis so it doesn't hang."""
     await app.state.redis.close()
 
 
 @app.post("/characters/", tags=["characters"], status_code=status.HTTP_201_CREATED)
 async def save_character():
-    return {"message": "Hello World"}
+    return await store_character(app.state.redis, "ABCD", {})
 
 
 @app.patch("/characters/{character_id}", tags=["characters"])
@@ -55,7 +57,12 @@ async def update_character(
 async def get_character(
     character_id: str = Path(..., title="The unique character code.")
 ):
-    return {"character_id": character_id}
+    character = await fetch_character(app.state.redis, character_id)
+
+    if character:
+        return character
+    else:
+        raise HTTPException(status_code=404, detail="Character not found")
 
 
 class AudioBody(BaseModel):
