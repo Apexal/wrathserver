@@ -2,10 +2,10 @@ import logging
 import json
 import random
 import string
-from typing import Any, Optional
+from typing import Optional
 from aioredis import from_url, Redis
 
-from api.models import Character
+from api.models import CharacterBase, CharacterOut
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +29,13 @@ async def generate_new_character_id(redis: Redis):
     return id
 
 
-async def store_character(redis: Redis, key: str, character: Character):
+async def store_character(redis: Redis, key: str, character: CharacterBase):
     await redis.hset("characters", key, json.dumps(character.dict()))
     return character
 
 
-async def fetch_character(redis: Redis, key: str) -> Optional[Character]:
+async def fetch_character(redis: Redis, key: str) -> Optional[CharacterOut]:
     character_json = await redis.hget("characters", key)
     if character_json:
         return None
-    return Character(**character_json)
+    return CharacterOut(**character_json)

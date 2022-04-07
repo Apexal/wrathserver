@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Wrathserver",
     description="REST API to store, create, and serve characters from Wrathspriter to Wrathskeller.",
-    version="0.0.3",
+    version="0.0.5",
     contact={
         "name": "Frank Matranga",
         "url": "https://github.com/Apexal",
@@ -50,8 +50,13 @@ async def shutdown_event():
     await app.state.redis.close()
 
 
-@app.post("/characters/", tags=["characters"], status_code=status.HTTP_201_CREATED)
-async def save_character(character: Character):
+@app.post(
+    "/characters/",
+    tags=["characters"],
+    status_code=status.HTTP_201_CREATED,
+    response_model=CharacterOut,
+)
+async def save_character(character: CharacterBase):
     new_character_id = await generate_new_character_id(app.state.redis)
     logger.info(f"Generated new character id '{new_character_id}'")
     saved_character = await store_character(
@@ -60,14 +65,16 @@ async def save_character(character: Character):
     return saved_character
 
 
-@app.patch("/characters/{character_id}", tags=["characters"])
+@app.patch(
+    "/characters/{character_id}", tags=["characters"], response_model=CharacterOut
+)
 async def update_character(
     character_id: str = Path(..., title="The unique character code.")
 ):
     return {"character_id": character_id}
 
 
-@app.get("/characters/{character_id}", tags=["characters"], response_model=Character)
+@app.get("/characters/{character_id}", tags=["characters"], response_model=CharacterOut)
 async def get_character(
     character_id: str = Path(..., title="The unique character code.")
 ):
