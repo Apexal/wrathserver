@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI, HTTPException, Path, status
+from fastapi import FastAPI, HTTPException, Path, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from api.db import (
     fetch_character,
@@ -56,8 +56,14 @@ async def shutdown_event():
     status_code=status.HTTP_201_CREATED,
     response_model=CharacterOut,
 )
-async def save_character(character: CharacterBase):
-    new_character_id = await generate_new_character_id(app.state.redis)
+async def save_character(
+    character: CharacterBase, character_id: Optional[str] = Query(None, max_length=5)
+):
+    new_character_id = (
+        character_id
+        if character_id
+        else await generate_new_character_id(app.state.redis)
+    )
     logger.info(f"Generated new character id '{new_character_id}'")
     saved_character = await store_character(
         app.state.redis, new_character_id, character
