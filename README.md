@@ -13,7 +13,7 @@ A REST API for facilitating the creation of characters for Wrathskeller.
 - [ ] Trim audio silence
 
 ## Setup
-
+- Install Python 3.8.13
 - Install [Poetry package manager](https://python-poetry.org/docs/)
 - Clone repository `$ git clone git@github.com:Apexal/wrathserver.git`
 - Download dependencies `$ poetry install`
