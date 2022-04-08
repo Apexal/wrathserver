@@ -80,7 +80,7 @@ class CharacterBase(BaseModel):
     name: str
     backstory: str
     actions: List[CharacterAction]
-    major: SchoolProgram
+    major: Optional[SchoolProgram]
     minor: Optional[SchoolProgram]
     stateSoundEffects: StateSoundEffects
     stateAnimations: StateAnimations
