@@ -2,6 +2,7 @@ import logging
 import json
 import random
 import string
+import os
 from typing import Optional
 from aioredis import from_url, Redis
 
@@ -9,10 +10,16 @@ from api.models import CharacterBase, CharacterOut
 
 logger = logging.getLogger(__name__)
 
+REDIS_URL = os.environ["REDIS_URL"]
+
 
 async def initialize_redis_pool() -> Redis:
     logger.info(f"Connecting to Redis...")
-    return from_url("redis://localhost", encoding="utf-8", decode_responses=True)
+    return from_url(
+        REDIS_URL,
+        encoding="utf-8",
+        decode_responses=True,
+    )
 
 
 def generate_character_id():
