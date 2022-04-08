@@ -11,6 +11,9 @@ from api.removeBackground import remove_bg_and_resize_b64
 from api.normalizeAudio import normalize_mp3_b64
 from api.models import *
 
+FORMAT = "%(levelname)s:\t%(message)s"
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -70,15 +73,6 @@ async def save_character(
     )
 
     return saved_character
-
-
-@app.patch(
-    "/characters/{character_id}", tags=["characters"], response_model=CharacterOut
-)
-async def update_character(
-    character_id: str = Path(..., title="The unique character code.")
-):
-    return {"character_id": character_id}
 
 
 @app.get("/characters/{character_id}", tags=["characters"], response_model=CharacterOut)
