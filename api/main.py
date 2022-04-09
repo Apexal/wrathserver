@@ -8,7 +8,7 @@ from api.db import (
     store_character,
 )
 from api.removeBackground import remove_bg_and_resize_b64
-from api.normalizeAudio import normalize_mp3_b64
+from api.normalizeAudio import normalize_to_b64
 from api.models import *
 
 FORMAT = "%(levelname)s:\t%(message)s"
@@ -88,8 +88,12 @@ async def get_character(
 
 
 @app.post("/audio", tags=["process"])
-async def process_audio(body: AudioBody):
-    normalized_mp3_b64 = normalize_mp3_b64(body.base64EncodedAudio)
+async def process_audio(mimetype: str, body: AudioBody):
+    try:
+        normalized_mp3_b64 = normalize_to_b64(body.base64EncodedAudio, mimetype)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e)
+
     return AudioBody(base64EncodedAudio=normalized_mp3_b64)
 
 
