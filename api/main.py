@@ -97,10 +97,10 @@ async def process_audio(mimetype: str, body: AudioBody):
     return AudioBody(base64EncodedAudio=normalized_mp3_b64)
 
 
-@app.post("/image", tags=["process"])
-async def process_image(body: ImageBody):
+@app.post("/image", tags=["process"], response_model=ImageBodyOut)
+async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
 
     png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
 
-    return ImageBody(base64EncodedImage=png_image_bg_removed_b64)
+    return ImageBodyOut(base64EncodedImage=png_image_bg_removed_b64)

@@ -94,5 +94,19 @@ class AudioBody(BaseModel):
     base64EncodedAudio: str
 
 
-class ImageBody(BaseModel):
+class PoseLandmark(BaseModel):
+    x: int
+    y: int
+    z: int
+
+
+class ImageBodyBase(BaseModel):
     base64EncodedImage: str
+
+
+class ImageBodyIn(ImageBodyBase):
+    normalizedPoseLandmarks: List[PoseLandmark]
+
+
+class ImageBodyOut(ImageBodyBase):
+    pass
