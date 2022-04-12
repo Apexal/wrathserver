@@ -4,10 +4,10 @@ A REST API for facilitating the creation of characters for Wrathskeller.
 
 ## Planned Features
 
-- [ ] Store characters from Wrathspriter
-- [ ] Retrieve characters from Wrathskeller
+- [x] Store characters from Wrathspriter
+- [x] Retrieve characters from Wrathskeller
 - [x] Remove image backgrounds using machine learning
-- [ ] Check match between proposed image and template image
+- [ ] Normalize pose images
 - [x] Normalize audio volume
 - [ ] Lessen audio background noise
 - [ ] Trim audio silence
