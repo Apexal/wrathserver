@@ -14,8 +14,6 @@ def trim_mp3_bytes(mp3_bytes: bytes) -> bytes:
     return buf.getvalue()
 
 def trim_mp3_b64(mp3_b64: str) -> str:
-    with open("output.mp3", "wb") as f:
-        f.write(base64.standard_b64decode(mp3_b64))
     return base64.standard_b64encode(
         trim_mp3_bytes(base64.standard_b64decode(mp3_b64))
     ).decode("utf-8")
