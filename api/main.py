@@ -7,9 +7,11 @@ from api.db import (
     initialize_redis_pool,
     store_character,
 )
-from api.removeBackground import remove_bg_and_resize_b64
+from api.removeBackground import remove_background
 from api.normalizeAudio import normalize_to_b64
 from api.models import *
+from api.utils.converting import b64_to_image, image_to_b64
+from api.utils.images import crop_to_content, crop_to_pose, expand_img_to_square, resize
 
 FORMAT = "%(levelname)s:\t%(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -97,10 +99,23 @@ async def process_audio(mimetype: str, body: AudioBody):
     return AudioBody(base64EncodedAudio=normalized_mp3_b64)
 
 
-@app.post("/image", tags=["process"])
-async def process_image(body: ImageBody):
+@app.post("/image", tags=["process"], response_model=ImageBodyOut)
+async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
 
-    png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
+    crop_func = (
+        (lambda img: crop_to_pose(img, body.normalizedPoseLandmarks))
+        if body.normalizedPoseLandmarks
+        else crop_to_content
+    )
 
-    return ImageBody(base64EncodedImage=png_image_bg_removed_b64)
+    base_image = b64_to_image(b64_image)
+    no_bg_image = remove_background(base_image)
+    cropped_no_bg_image = crop_func(no_bg_image)
+    square_cropped_no_bg_image = expand_img_to_square(cropped_no_bg_image)
+    resized_cropped_bo_bg_image = resize(square_cropped_no_bg_image)
+    # png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
+
+    final_image = resized_cropped_bo_bg_image
+
+    return ImageBodyOut(base64EncodedImage=image_to_b64(final_image))

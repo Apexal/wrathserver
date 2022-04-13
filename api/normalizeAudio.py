@@ -2,6 +2,8 @@ import base64
 from io import BytesIO
 from pydub import AudioSegment
 
+from api.utils.converting import bytes_to_b64
+
 
 def match_target_amplitude(sound, target_dBFS: float):
     change_in_dBFS = target_dBFS - sound.dBFS
@@ -29,6 +31,4 @@ def normalize_bytes(audio_bytes: bytes, mimetype: str) -> bytes:
 
 
 def normalize_to_b64(b64: str, mimetype: str) -> str:
-    return base64.standard_b64encode(
-        normalize_bytes(base64.standard_b64decode(b64), mimetype)
-    ).decode("utf-8")
+    return bytes_to_b64(normalize_bytes(base64.standard_b64decode(b64), mimetype))

@@ -1,5 +1,8 @@
-import base64
+from typing import List
 from PIL import Image
+
+from api.models import PoseLandmark
+from api.utils.posing import pose_bounding_box
 
 
 def crop_to_content(img: Image.Image) -> Image.Image:
@@ -8,21 +11,17 @@ def crop_to_content(img: Image.Image) -> Image.Image:
     return cropped
 
 
+def crop_to_pose(
+    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]
+) -> Image.Image:
+    bounding_box = pose_bounding_box(img, normalized_pose_landmarks)
+    cropped = img.crop(bounding_box)
+    return cropped
+
+
 def resize(img: Image.Image) -> Image.Image:
     img.thumbnail((400, 400))
     return img
-
-
-def b64_to_bytes(b64: str) -> bytes:
-    return base64.standard_b64decode(b64)
-
-
-def bytes_to_b64(b: bytes) -> str:
-    return base64.standard_b64encode(b).decode("utf-8")
-
-
-def b64_to_image(b64_png: str) -> Image.Image:
-    return Image.open(b64_to_bytes(b64_png))
 
 
 def expand_img_to_square(img: Image.Image):
