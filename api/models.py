@@ -95,9 +95,9 @@ class AudioBody(BaseModel):
 
 
 class PoseLandmark(BaseModel):
-    x: int
-    y: int
-    z: int
+    x: float
+    y: float
+    z: float
 
 
 class ImageBodyBase(BaseModel):
@@ -105,7 +105,7 @@ class ImageBodyBase(BaseModel):
 
 
 class ImageBodyIn(ImageBodyBase):
-    normalizedPoseLandmarks: List[PoseLandmark]
+    normalizedPoseLandmarks: Optional[List[PoseLandmark]]
 
 
 class ImageBodyOut(ImageBodyBase):
