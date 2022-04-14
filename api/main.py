@@ -12,6 +12,7 @@ from api.normalizeAudio import normalize_to_b64
 from api.models import *
 from api.utils.converting import b64_to_image, image_to_b64
 from api.utils.images import crop_to_content, crop_to_pose, expand_img_to_square, resize
+from api.utils.posing import determine_pose_from_image
 
 FORMAT = "%(levelname)s:\t%(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -103,15 +104,18 @@ async def process_audio(mimetype: str, body: AudioBody):
 async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
 
-    crop_func = (
-        (lambda img: crop_to_pose(img, body.normalizedPoseLandmarks))
-        if body.normalizedPoseLandmarks
-        else crop_to_content
-    )
+    normalized_pose_landmarks = body.normalizedPoseLandmarks
+    if normalized_pose_landmarks is None:
+        pose_results = determine_pose_from_image(b64_to_image(b64_image))
+        if not pose_results.pose_landmarks:  # type: ignore
+            # TODO: error message
+            raise HTTPException(status_code=400, detail="Pose not detected in image")
+
+        normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
 
     base_image = b64_to_image(b64_image)
     no_bg_image = remove_background(base_image)
-    cropped_no_bg_image = crop_func(no_bg_image)
+    cropped_no_bg_image = crop_to_pose(no_bg_image, normalized_pose_landmarks)
     square_cropped_no_bg_image = expand_img_to_square(cropped_no_bg_image)
     resized_cropped_bo_bg_image = resize(square_cropped_no_bg_image)
     # png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore

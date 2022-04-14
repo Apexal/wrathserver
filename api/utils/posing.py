@@ -1,7 +1,10 @@
 import math
 from typing import Dict, List, Tuple
+
+import numpy as np
 from api.models import PoseLandmark
 from mediapipe.python.solutions.pose import PoseLandmark as MPPoseLandmarks
+from mediapipe.python.solutions.pose import Pose
 from PIL import Image
 
 
@@ -22,7 +25,7 @@ def calculate_angle(a: PoseLandmark, b: PoseLandmark, c: PoseLandmark) -> float:
 
 
 def pose_bounding_box(
-    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark], buffer: int = 10
+    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark], buffer: int = 70
 ) -> Tuple[int, int, int, int]:
     """left, upper, right, and lower"""
 
@@ -49,3 +52,14 @@ def pose_bounding_box(
         min(int((x_max * width) + buffer), width),
         min(int((y_max * height) + buffer), height),
     )
+
+
+def determine_pose_from_image(img: Image.Image):
+    with Pose(
+        static_image_mode=True,
+        model_complexity=2,
+        min_detection_confidence=0.5,
+    ) as pose:
+        results = pose.process(np.asarray(img))
+
+        return results
