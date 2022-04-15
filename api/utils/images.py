@@ -14,7 +14,7 @@ def crop_to_content(img: Image.Image) -> Image.Image:
 def crop_to_pose(
     img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]
 ) -> Image.Image:
-    bounding_box = pose_bounding_box(img, normalized_pose_landmarks)
+    bounding_box = pose_bounding_box(img, normalized_pose_landmarks, buffer=75)
     cropped = img.crop(bounding_box)
     return cropped
 
@@ -37,3 +37,7 @@ def expand_img_to_square(img: Image.Image):
         result = Image.new(img.mode, (height, height), background_color)
         result.paste(img, ((height - width) // 2, 0))
         return result
+
+
+def scale_img(img: Image.Image, scale_factor: float) -> Image.Image:
+    return img.resize(tuple(int(scale_factor * s) for s in img.size))

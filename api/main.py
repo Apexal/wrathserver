@@ -11,7 +11,14 @@ from api.removeBackground import remove_background
 from api.normalizeAudio import normalize_to_b64
 from api.models import *
 from api.utils.converting import b64_to_image, image_to_b64
-from api.utils.images import crop_to_content, crop_to_pose, expand_img_to_square, resize
+from api.utils.images import (
+    crop_to_content,
+    crop_to_pose,
+    expand_img_to_square,
+    resize,
+    scale_img,
+)
+from api.utils.posing import determine_pose_from_image, pose_height
 
 FORMAT = "%(levelname)s:\t%(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -103,19 +110,23 @@ async def process_audio(mimetype: str, body: AudioBody):
 async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
 
-    crop_func = (
-        (lambda img: crop_to_pose(img, body.normalizedPoseLandmarks))
-        if body.normalizedPoseLandmarks
-        else crop_to_content
-    )
+    normalized_pose_landmarks = body.normalizedPoseLandmarks
+    if normalized_pose_landmarks is None:
+        pose_results = determine_pose_from_image(b64_to_image(b64_image))
+        if not pose_results.pose_landmarks:  # type: ignore
+            # TODO: error message
+            raise HTTPException(status_code=400, detail="Pose not detected in image")
 
-    base_image = b64_to_image(b64_image)
-    no_bg_image = remove_background(base_image)
-    cropped_no_bg_image = crop_func(no_bg_image)
-    square_cropped_no_bg_image = expand_img_to_square(cropped_no_bg_image)
-    resized_cropped_bo_bg_image = resize(square_cropped_no_bg_image)
-    # png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
+        normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
 
-    final_image = resized_cropped_bo_bg_image
+    img = b64_to_image(b64_image)
 
-    return ImageBodyOut(base64EncodedImage=image_to_b64(final_image))
+    # Height of person if standing up, not current height
+    height = pose_height(img, normalized_pose_landmarks)
+
+    img = scale_img(img, scale_factor=250 / height)
+    img = crop_to_pose(img, normalized_pose_landmarks)
+    img = expand_img_to_square(img)
+    img = remove_background(img)
+
+    return ImageBodyOut(base64EncodedImage=image_to_b64(img))
