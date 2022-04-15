@@ -120,7 +120,11 @@ async def process_image(body: ImageBodyIn):
         normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
 
     img = b64_to_image(b64_image)
-    img = scale_img(img, scale_factor=250 / pose_height(img, normalized_pose_landmarks))
+
+    # Height of person if standing up, not current height
+    height = pose_height(img, normalized_pose_landmarks)
+
+    img = scale_img(img, scale_factor=250 / height)
     img = crop_to_pose(img, normalized_pose_landmarks)
     img = expand_img_to_square(img)
     img = remove_background(img)

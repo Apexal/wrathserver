@@ -32,7 +32,7 @@ class PoseAngle(BaseModel):
 
 
 class AnimationFrame(BaseModel):
-    base64EncodedImage: str
+    base64EncodedImage: Optional[str]
     pose: Optional[List[PoseAngle]]
     hitCollider: HitCollider
     bodyCollider: BodyCollider
