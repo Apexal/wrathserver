@@ -8,6 +8,10 @@ from mediapipe.python.solutions.pose import Pose
 from PIL import Image
 
 
+def dist(a: PoseLandmark, b: PoseLandmark):
+    return math.sqrt(((a.x - b.x) ** 2) + ((a.y - b.y) ** 2))
+
+
 def calculate_angle(a: PoseLandmark, b: PoseLandmark, c: PoseLandmark) -> float:
     print(a, b, c)
     angle = math.degrees(
@@ -45,6 +49,7 @@ def pose_bounding_box(
             y_max = landmark.y
 
     width, height = img.size
+    y_min = y_max - pose_height(img, normalized_pose_landmarks)
 
     return (
         max(0, int((x_min * width) - buffer)),
@@ -55,15 +60,25 @@ def pose_bounding_box(
 
 
 def pose_height(img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]) -> int:
+    """Given a pose in an image, calculate how tall the pose would be if standing up straight."""
+
     nose_y = normalized_pose_landmarks[MPPoseLandmarks.NOSE].y
-    lowest_ankle_y = min(
-        normalized_pose_landmarks[MPPoseLandmarks.LEFT_HEEL].y,
-        normalized_pose_landmarks[MPPoseLandmarks.RIGHT_HEEL].y,
+    normalized_left_hip_y = normalized_pose_landmarks[MPPoseLandmarks.LEFT_HIP].y
+
+    normalized_left_leg_height = dist(
+        normalized_pose_landmarks[MPPoseLandmarks.LEFT_HEEL],
+        normalized_pose_landmarks[MPPoseLandmarks.LEFT_KNEE],
+    ) + dist(
+        normalized_pose_landmarks[MPPoseLandmarks.LEFT_KNEE],
+        normalized_pose_landmarks[MPPoseLandmarks.LEFT_HIP],
     )
 
-    height = lowest_ankle_y - nose_y
+    normalized_torso_height = normalized_left_hip_y - nose_y
 
-    return int(height * img.size[1])
+    normalized_height = normalized_left_leg_height + normalized_torso_height
+    actual_height = int((normalized_height) * img.size[1])
+
+    return actual_height
 
 
 def determine_pose_from_image(img: Image.Image):
