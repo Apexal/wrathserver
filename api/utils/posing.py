@@ -25,7 +25,7 @@ def calculate_angle(a: PoseLandmark, b: PoseLandmark, c: PoseLandmark) -> float:
 
 
 def pose_bounding_box(
-    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark], buffer: int = 70
+    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark], buffer: int = 50
 ) -> Tuple[int, int, int, int]:
     """left, upper, right, and lower"""
 
@@ -52,6 +52,18 @@ def pose_bounding_box(
         min(int((x_max * width) + buffer), width),
         min(int((y_max * height) + buffer), height),
     )
+
+
+def pose_height(img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]) -> int:
+    nose_y = normalized_pose_landmarks[MPPoseLandmarks.NOSE].y
+    lowest_ankle_y = min(
+        normalized_pose_landmarks[MPPoseLandmarks.LEFT_HEEL].y,
+        normalized_pose_landmarks[MPPoseLandmarks.RIGHT_HEEL].y,
+    )
+
+    height = lowest_ankle_y - nose_y
+
+    return int(height * img.size[1])
 
 
 def determine_pose_from_image(img: Image.Image):
