@@ -11,8 +11,14 @@ from api.removeBackground import remove_background
 from api.normalizeAudio import normalize_to_b64
 from api.models import *
 from api.utils.converting import b64_to_image, image_to_b64
-from api.utils.images import crop_to_content, crop_to_pose, expand_img_to_square, resize
-from api.utils.posing import determine_pose_from_image
+from api.utils.images import (
+    crop_to_content,
+    crop_to_pose,
+    expand_img_to_square,
+    resize,
+    scale_img,
+)
+from api.utils.posing import determine_pose_from_image, pose_height
 
 FORMAT = "%(levelname)s:\t%(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -113,13 +119,10 @@ async def process_image(body: ImageBodyIn):
 
         normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
 
-    base_image = b64_to_image(b64_image)
-    no_bg_image = remove_background(base_image)
-    cropped_no_bg_image = crop_to_pose(no_bg_image, normalized_pose_landmarks)
-    square_cropped_no_bg_image = expand_img_to_square(cropped_no_bg_image)
-    resized_cropped_bo_bg_image = resize(square_cropped_no_bg_image)
-    # png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
+    img = b64_to_image(b64_image)
+    img = scale_img(img, scale_factor=250 / pose_height(img, normalized_pose_landmarks))
+    img = crop_to_pose(img, normalized_pose_landmarks)
+    img = expand_img_to_square(img)
+    img = remove_background(img)
 
-    final_image = resized_cropped_bo_bg_image
-
-    return ImageBodyOut(base64EncodedImage=image_to_b64(final_image))
+    return ImageBodyOut(base64EncodedImage=image_to_b64(img))
