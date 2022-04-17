@@ -1,13 +1,17 @@
+from errno import EEXIST
+from opcode import opname
+from tkinter import E
 import cv2
 import mediapipe as mp
 import numpy as np
 import math
+import json
 
 # variables 
 CEF_COUNTER =0
 TOTAL_BLINKS =0
 # constants
-CLOSED_EYES_FRAME =5
+CLOSED_EYES_FRAME =2
 
 # Left eyes indices 
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
@@ -119,17 +123,79 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
 			try:
 				landmarks = pose_results.pose_landmarks.landmark
 
-				shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
-				elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-				wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
-				angle = calculate_angle(shoulder, elbow, wrist)
+				shoulderL = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+				shoulderR = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+				elbowL = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+				wristL = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+				elbowR = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
+				wristR = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
+				hipR = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+				kneeR = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+				ankleR = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+				hipL = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+				kneeL = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
+				ankleL = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+
+				angleInfo=[]
+				angleValues=[]
+				angle1 = calculate_angle(shoulderR, elbowL, wristL)
+				angle1Info=["PoseLandmark.RIGHT_SHOULDER","PoseLandmark.LEFT_ELBOW","PoseLandmark.LEFT_WRIST"]
+				angle2 = calculate_angle(shoulderR, elbowR, wristR)
+				angle2Info=["PoseLandmark.RIGHT_SHOULDER","PoseLandmark.RIGHT_ELBOW","PoseLandmark.RIGHT_WRIST"]
+				angle3 = calculate_angle(shoulderL, elbowL, wristL)
+				angle3Info=["PoseLandmark.LEFT_SHOULDER","PoseLandmark.LEFT_ELBOW","PoseLandmark.LEFT_WRIST"]
+				angle4 = calculate_angle(ankleL, kneeL, hipL)
+				angle4Info=["PoseLandmark.LEFT_ANKLE","PoseLandmark.LEFT_KNEE","PoseLandmark.LEFT_HIP"]
+				angle5 = calculate_angle(ankleR, kneeR, hipR)
+				angle5Info=["PoseLandmark.RIGHT_ANKLE","PoseLandmark.RIGHT_KNEE","PoseLandmark.RIGHT_HIP"]
+				angle6 = calculate_angle(shoulderL, elbowR, wristR)
+				angle6Info=["PoseLandmark.LEFT_SHOULDER","PoseLandmark.RIGHT_ELBOW","PoseLandmark.RIGHT_WRIST"]
+				angle7 = calculate_angle(kneeR, hipR, shoulderR)
+				angle7Info=["PoseLandmark.RIGHT_KNEE","PoseLandmark.RIGHT_HIP","PoseLandmark.RIGHT_SHOULDER"]
+				angle8 = calculate_angle(kneeL, hipL, shoulderL)
+				angle8Info=["PoseLandmark.LEFT_KNEE","PoseLandmark.LEFT_HIP","PoseLandmark.LEFT_SHOULDER"]
+				
+				angleInfo.append(angle1Info)
+				angleInfo.append(angle2Info)
+				angleInfo.append(angle3Info)
+				angleInfo.append(angle4Info)
+				angleInfo.append(angle5Info)
+				angleInfo.append(angle6Info)
+				angleInfo.append(angle7Info)
+				angleInfo.append(angle8Info)
+
+				angleValues.append(angle1)
+				angleValues.append(angle2)
+				angleValues.append(angle3)
+				angleValues.append(angle4)
+				angleValues.append(angle5)
+				angleValues.append(angle6)
+				angleValues.append(angle7)
+				angleValues.append(angle8)
 
 
-				stage = "Outpose"+str(TOTAL_BLINKS)
-				if angle > 170 and angle<190 and TOTAL_BLINKS>0:
-					stage = "InPose"+str(TOTAL_BLINKS)
-				else:
-					stage="Outpose"+str(TOTAL_BLINKS)
+				if TOTAL_BLINKS>0:
+					#print(angle1)
+					poseInfo=[]
+					for i in range(len(angleValues)):
+						h={}
+						h["poseIndex1"]=angleInfo[i][0]
+						h["poseIndex2"]=angleInfo[i][1]
+						h["poseIndex3"]=angleInfo[i][2]
+						if(angleValues[i]+8>180):
+							h["angleMax"]=180
+						else:
+							h["angleMax"]=angleValues[i]+8
+						h["angleMin"]=abs(angleValues[i]-8)
+						poseInfo.append(h)
+					print(poseInfo)
+					print(angle2)
+					final= json.dumps(poseInfo, indent=2)
+					with open("newPose.txt","w") as f:
+						f.write(final)
+					break
+					
+
 			except:
 				pass
 
@@ -141,7 +207,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
 
 			
-			#cv2.putText(image, str(TOTAL_BLINKS),(60,60),cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+			cv2.putText(image, str(TOTAL_BLINKS),(60,60),cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
 			cv2.imshow('IMG', image)
 			key = cv2.waitKey(2)
 			if key==ord('q') or key ==ord('Q'):
