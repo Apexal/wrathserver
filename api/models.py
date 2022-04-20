@@ -105,7 +105,7 @@ class ImageBodyBase(BaseModel):
 
 
 class ImageBodyIn(ImageBodyBase):
-    normalizedPoseLandmarks: Optional[List[PoseLandmark]]
+    pass
 
 
 class ImageBodyOut(ImageBodyBase):

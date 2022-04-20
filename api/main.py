@@ -13,9 +13,6 @@ from api.utils.converting import b64_to_image, image_to_b64
 from api.utils.images import (
     fully_process_img,
 )
-from api.utils.posing import (
-    determine_pose_from_image,
-)
 
 FORMAT = "%(levelname)s:\t%(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -107,17 +104,6 @@ async def process_audio(mimetype: str, body: AudioBody):
 async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
 
-    normalized_pose_landmarks = body.normalizedPoseLandmarks
-
-    # If no pose is sent with the image, run MediaPipe locally to get the pose
-    if normalized_pose_landmarks is None:
-        pose_results = determine_pose_from_image(b64_to_image(b64_image))
-        if not pose_results.pose_landmarks:  # type: ignore
-            raise HTTPException(status_code=400, detail="Pose not detected in image")
-
-        normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
-
-    img = b64_to_image(b64_image)
-    img = fully_process_img(img, normalized_pose_landmarks)
+    img = fully_process_img(b64_to_image(b64_image))
 
     return ImageBodyOut(base64EncodedImage=image_to_b64(img))
