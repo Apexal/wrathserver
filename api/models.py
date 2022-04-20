@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class SoundEffect(BaseModel):
@@ -32,7 +32,7 @@ class PoseAngle(BaseModel):
 
 
 class AnimationFrame(BaseModel):
-    base64EncodedImage: Optional[str]
+    base64EncodedImage: str
     pose: Optional[List[PoseAngle]]
     hitCollider: HitCollider
     bodyCollider: BodyCollider
@@ -80,7 +80,7 @@ class CharacterBase(BaseModel):
     name: str
     backstory: str
     actions: List[CharacterAction]
-    major: Optional[SchoolProgram]
+    major: SchoolProgram
     minor: Optional[SchoolProgram]
     stateSoundEffects: StateSoundEffects
     stateAnimations: StateAnimations
