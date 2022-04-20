@@ -1,10 +1,12 @@
 from typing import List
 from PIL import Image
+from fastapi import HTTPException
 
 from api.models import PoseLandmark
-from api.removeBackground import remove_background
+from api.removeBackground import remove_background_seg_mask
 from api.utils.posing import (
     DESIRED_POSE_HEIGHT,
+    determine_pose_from_image,
     pose_bounding_box,
     pose_standing_height,
 )
@@ -63,21 +65,27 @@ def expand_img_to_square(img: Image.Image, size: int = 400):
 
 
 def scale_img(img: Image.Image, scale_factor: float) -> Image.Image:
-    print("scale_factor", scale_factor)
     return img.resize(tuple(int(scale_factor * s) for s in img.size))
 
 
-def fully_process_img(
-    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]
-) -> Image.Image:
+def fully_process_img(img: Image.Image) -> Image.Image:
     """Scales, crops, removes background, and makes square an image with a pose."""
+
+    # Use MediaPipe to determine pose and segmentation mask
+    pose_results = determine_pose_from_image(img)
+    if not pose_results.pose_landmarks:  # type: ignore
+        raise HTTPException(status_code=400, detail="Pose not detected in image")
+
+    normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
+    seg_mask = pose_results.segmentation_mask  # type: ignore
+
     standing_height = pose_standing_height(img, normalized_pose_landmarks)
 
     scale_factor = DESIRED_POSE_HEIGHT / standing_height
 
+    img = remove_background_seg_mask(img, seg_mask)
     img = scale_img(img, scale_factor)
     img = crop_to_pose(img, normalized_pose_landmarks)
-    img = remove_background(img)
     img = expand_img_to_square(img, size=400)
 
     return img

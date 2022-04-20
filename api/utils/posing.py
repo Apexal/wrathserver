@@ -103,7 +103,7 @@ def determine_pose_from_image(img: Image.Image):
         static_image_mode=True,
         model_complexity=2,
         min_detection_confidence=0.5,
+        enable_segmentation=True,
     ) as pose:
-        results = pose.process(np.asarray(img))
-
+        results = pose.process(np.asarray(img.convert("RGB")))
         return results
