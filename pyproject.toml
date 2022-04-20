@@ -9,10 +9,10 @@ license = "MIT"
 python = "3.8.13"
 python-dotenv = "^0.19.2"
 fastapi = "^0.72.0"
-rembg = "^2.0.10"
 pydub = "^0.25.1"
 aioredis = "^2.0.1"
 mediapipe = "^0.8.9"
+uvicorn = "^0.17.6"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.1.0", allow-prereleases = true}
