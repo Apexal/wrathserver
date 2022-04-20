@@ -1,6 +1,6 @@
 import base64
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def b64_to_bytes(b64: str) -> bytes:
@@ -12,7 +12,9 @@ def bytes_to_b64(b: bytes) -> str:
 
 
 def b64_to_image(b64_png: str) -> Image.Image:
-    return Image.open(BytesIO(b64_to_bytes(b64_png)))
+    img = Image.open(BytesIO(b64_to_bytes(b64_png)))
+    img = ImageOps.exif_transpose(img)
+    return img
 
 
 def image_to_b64(img: Image.Image) -> str:
