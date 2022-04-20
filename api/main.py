@@ -7,18 +7,15 @@ from api.db import (
     initialize_redis_pool,
     store_character,
 )
-from api.removeBackground import remove_background
 from api.normalizeAudio import normalize_to_b64
 from api.models import *
 from api.utils.converting import b64_to_image, image_to_b64
 from api.utils.images import (
-    crop_to_content,
-    crop_to_pose,
-    expand_img_to_square,
-    resize,
-    scale_img,
+    fully_process_img,
 )
-from api.utils.posing import determine_pose_from_image, pose_height
+from api.utils.posing import (
+    determine_pose_from_image,
+)
 
 FORMAT = "%(levelname)s:\t%(message)s"
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
@@ -28,7 +25,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Wrathserver",
     description="REST API to store, create, and serve characters from Wrathspriter to Wrathskeller.",
-    version="0.0.5",
+    version="0.1.0",
     contact={
         "name": "Frank Matranga",
         "url": "https://github.com/Apexal",
@@ -111,22 +108,16 @@ async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
 
     normalized_pose_landmarks = body.normalizedPoseLandmarks
+
+    # If no pose is sent with the image, run MediaPipe locally to get the pose
     if normalized_pose_landmarks is None:
         pose_results = determine_pose_from_image(b64_to_image(b64_image))
         if not pose_results.pose_landmarks:  # type: ignore
-            # TODO: error message
             raise HTTPException(status_code=400, detail="Pose not detected in image")
 
         normalized_pose_landmarks = pose_results.pose_landmarks.landmark  # type: ignore
 
     img = b64_to_image(b64_image)
-
-    # Height of person if standing up, not current height
-    height = pose_height(img, normalized_pose_landmarks)
-
-    img = scale_img(img, scale_factor=250 / height)
-    img = crop_to_pose(img, normalized_pose_landmarks)
-    img = expand_img_to_square(img)
-    img = remove_background(img)
+    img = fully_process_img(img, normalized_pose_landmarks)
 
     return ImageBodyOut(base64EncodedImage=image_to_b64(img))

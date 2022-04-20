@@ -1,11 +1,14 @@
 import math
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from api.models import PoseLandmark
 from mediapipe.python.solutions.pose import PoseLandmark as MPPoseLandmarks
 from mediapipe.python.solutions.pose import Pose
 from PIL import Image
+
+
+DESIRED_POSE_HEIGHT = 300
 
 
 def dist(a: PoseLandmark, b: PoseLandmark):
@@ -29,7 +32,8 @@ def calculate_angle(a: PoseLandmark, b: PoseLandmark, c: PoseLandmark) -> float:
 
 
 def pose_bounding_box(
-    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark], buffer: int = 50
+    img: Image.Image,
+    normalized_pose_landmarks: List[PoseLandmark],
 ) -> Tuple[int, int, int, int]:
     """left, upper, right, and lower"""
 
@@ -49,20 +53,23 @@ def pose_bounding_box(
             y_max = landmark.y
 
     width, height = img.size
-    y_min = y_max - pose_height(img, normalized_pose_landmarks)
 
     return (
-        max(0, int((x_min * width) - buffer)),
-        max(0, int((y_min * height) - buffer)),
-        min(int((x_max * width) + buffer), width),
-        min(int((y_max * height) + buffer), height),
+        max(0, int(x_min * width)),
+        max(0, int(y_min * height)),
+        min(int(x_max * width), width),
+        min(int(y_max * height), height),
     )
 
 
-def pose_height(img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]) -> int:
+def pose_standing_height(
+    img: Image.Image, normalized_pose_landmarks: List[PoseLandmark]
+) -> int:
     """Given a pose in an image, calculate how tall the pose would be if standing up straight."""
 
-    nose_y = normalized_pose_landmarks[MPPoseLandmarks.NOSE].y
+    img_width, img_height = img.size
+
+    normalized_left_eye_y = normalized_pose_landmarks[MPPoseLandmarks.LEFT_EYE].y
     normalized_left_hip_y = normalized_pose_landmarks[MPPoseLandmarks.LEFT_HIP].y
 
     normalized_left_leg_height = dist(
@@ -73,12 +80,22 @@ def pose_height(img: Image.Image, normalized_pose_landmarks: List[PoseLandmark])
         normalized_pose_landmarks[MPPoseLandmarks.LEFT_HIP],
     )
 
-    normalized_torso_height = normalized_left_hip_y - nose_y
+    normalized_right_leg_height = dist(
+        normalized_pose_landmarks[MPPoseLandmarks.RIGHT_HEEL],
+        normalized_pose_landmarks[MPPoseLandmarks.RIGHT_KNEE],
+    ) + dist(
+        normalized_pose_landmarks[MPPoseLandmarks.RIGHT_KNEE],
+        normalized_pose_landmarks[MPPoseLandmarks.RIGHT_HIP],
+    )
 
-    normalized_height = normalized_left_leg_height + normalized_torso_height
-    actual_height = int((normalized_height) * img.size[1])
+    normalized_leg_height = max(normalized_left_leg_height, normalized_right_leg_height)
 
-    return actual_height
+    normalized_torso_height = normalized_left_hip_y - normalized_left_eye_y
+
+    normalized_height = normalized_leg_height + normalized_torso_height
+    standing_height = int(normalized_height * img_height)
+
+    return standing_height
 
 
 def determine_pose_from_image(img: Image.Image):
