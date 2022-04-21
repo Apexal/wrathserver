@@ -1,14 +1,28 @@
-from fastapi import FastAPI, Path, WebSocket, status
+import logging
+from fastapi import FastAPI, HTTPException, Path, Query, status
 from fastapi.middleware.cors import CORSMiddleware
-from api.normalizeAudio import normalize_mp3_b64
-from api.removeBackground import remove_bg_and_resize_b64
-from pydantic import BaseModel
+from api.db import (
+    fetch_character,
+    generate_new_character_id,
+    initialize_redis_pool,
+    store_character,
+)
+from api.normalizeAudio import normalize_to_b64
+from api.models import *
+from api.utils.converting import b64_to_image, image_to_b64
+from api.utils.images import (
+    fully_process_img,
+)
 
+FORMAT = "%(levelname)s:\t%(message)s"
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Wrathserver",
     description="REST API to store, create, and serve characters from Wrathspriter to Wrathskeller.",
-    version="0.0.2",
+    version="0.1.0",
     contact={
         "name": "Frank Matranga",
         "url": "https://github.com/Apexal",
@@ -28,44 +42,68 @@ app.add_middleware(
 )
 
 
-@app.post("/characters/", tags=["characters"], status_code=status.HTTP_201_CREATED)
-async def save_character():
-    return {"message": "Hello World"}
+@app.on_event("startup")
+async def startup_event():
+    """On app startup, connect to the Redis server."""
+    logger.info(f"Starting up and connecting Redis...")
+    app.state.redis = await initialize_redis_pool()
 
 
-@app.patch("/characters/{character_id}", tags=["characters"])
-async def update_character(
-    character_id: str = Path(..., title="The unique character code.")
+@app.on_event("shutdown")
+async def shutdown_event():
+    """On app shutdown, close the connectiong to Redis so it doesn't hang."""
+    logger.info("Shutting down and disconnecting Redis...")
+    await app.state.redis.close()
+
+
+@app.post(
+    "/characters/",
+    tags=["characters"],
+    status_code=status.HTTP_201_CREATED,
+    response_model=CharacterOut,
+)
+async def save_character(
+    character: CharacterBase, character_id: Optional[str] = Query(None, max_length=5)
 ):
-    return {"character_id": character_id}
+    new_character_id = (
+        character_id
+        if character_id
+        else await generate_new_character_id(app.state.redis)
+    )
+    logger.info(f"Generated new character id '{new_character_id}'")
+    saved_character = await store_character(
+        app.state.redis, new_character_id, character
+    )
+
+    return saved_character
 
 
-@app.get("/characters/{character_id}", tags=["characters"])
+@app.get("/characters/{character_id}", tags=["characters"], response_model=CharacterOut)
 async def get_character(
     character_id: str = Path(..., title="The unique character code.")
 ):
-    return {"character_id": character_id}
+    character = await fetch_character(app.state.redis, character_id)
 
-
-class AudioBody(BaseModel):
-    base64EncodedAudio: str
-
-
-class ImageBody(BaseModel):
-    base64EncodedImage: str
+    if character:
+        return character
+    else:
+        raise HTTPException(status_code=404, detail="Character not found")
 
 
 @app.post("/audio", tags=["process"])
-async def process_audio(body: AudioBody):
-    normalized_mp3_b64 = normalize_mp3_b64(body.base64EncodedAudio)
+async def process_audio(mimetype: str, body: AudioBody):
+    try:
+        normalized_mp3_b64 = normalize_to_b64(body.base64EncodedAudio, mimetype)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e)
+
     return AudioBody(base64EncodedAudio=normalized_mp3_b64)
 
 
-@app.post("/image", tags=["process"])
-async def process_image(body: ImageBody):
+@app.post("/image", tags=["process"], response_model=ImageBodyOut)
+async def process_image(body: ImageBodyIn):
     b64_image = body.base64EncodedImage
-    # b64_pose_image = body.base64EncodedPoseImage
 
-    png_image_bg_removed_b64 = remove_bg_and_resize_b64(b64_image)  # type: ignore
+    img = fully_process_img(b64_to_image(b64_image))
 
-    return ImageBody(base64EncodedImage=png_image_bg_removed_b64)
+    return ImageBodyOut(base64EncodedImage=image_to_b64(img))
