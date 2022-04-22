@@ -13,6 +13,7 @@ pydub = "^0.25.1"
 aioredis = "^2.0.1"
 mediapipe = "^0.8.9"
 uvicorn = "^0.17.6"
+opencv-python-headless = "^4.5.5"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.1.0", allow-prereleases = true}
