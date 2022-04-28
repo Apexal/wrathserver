@@ -9,10 +9,11 @@ A REST API for facilitating the creation of characters for Wrathskeller.
 - [x] Remove image backgrounds using machine learning
 - [x] Normalize pose images
 - [x] Normalize audio volume
+- [x] Trim audio silence
 - [ ] Lessen audio background noise
-- [ ] Trim audio silence
 
 ## Setup
+
 - Install Python 3.8.13
 - Install FFMPEG
 - Install [Poetry package manager](https://python-poetry.org/docs/)

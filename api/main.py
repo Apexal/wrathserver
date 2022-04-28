@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Wrathserver",
     description="REST API to store, create, and serve characters from Wrathspriter to Wrathskeller.",
-    version="0.1.0",
+    version="0.9.0",
     contact={
         "name": "Frank Matranga",
         "url": "https://github.com/Apexal",
