@@ -7,7 +7,7 @@ from api.db import (
     initialize_redis_pool,
     store_character,
 )
-from api.normalizeAudio import normalize_bytes, normalize_to_b64
+from api.normalizeAudio import normalize_audio, normalize_bytes, normalize_to_b64
 from api.models import *
 from api.removeSilence import trim_mp3_b64, trim_mp3_bytes
 from api.utils.converting import (
@@ -102,7 +102,7 @@ async def get_character(
 async def process_audio(mimetype: str, body: AudioBody):
     try:
         audio = b64_to_audio(body.base64EncodedAudio, mimetype)
-        # mp3_bytes = b64_to_bytes(mp3_b64)
+        audio = normalize_audio(audio)
         # mp3_bytes = normalize_bytes(mp3_bytes, mimetype)
         # mp3_bytes = trim_mp3_bytes(mp3_bytes)
     except Exception as e:
