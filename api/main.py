@@ -7,15 +7,12 @@ from api.db import (
     initialize_redis_pool,
     store_character,
 )
-from api.normalizeAudio import normalize_audio, normalize_bytes, normalize_to_b64
 from api.models import *
-from api.removeSilence import trim_mp3_b64, trim_mp3_bytes
+from api.utils.audio import normalize_audio, trim_audio_silence
 from api.utils.converting import (
     audio_to_mp3_b64,
     b64_to_audio,
-    b64_to_bytes,
     b64_to_image,
-    bytes_to_b64,
     image_to_b64,
 )
 from api.utils.images import (
@@ -103,8 +100,7 @@ async def process_audio(mimetype: str, body: AudioBody):
     try:
         audio = b64_to_audio(body.base64EncodedAudio, mimetype)
         audio = normalize_audio(audio)
-        # mp3_bytes = normalize_bytes(mp3_bytes, mimetype)
-        # mp3_bytes = trim_mp3_bytes(mp3_bytes)
+        audio = trim_audio_silence(audio)
     except Exception as e:
         raise HTTPException(status_code=400, detail=e)
 
