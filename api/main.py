@@ -7,9 +7,17 @@ from api.db import (
     initialize_redis_pool,
     store_character,
 )
-from api.normalizeAudio import normalize_to_b64
+from api.normalizeAudio import normalize_bytes, normalize_to_b64
 from api.models import *
-from api.utils.converting import b64_to_image, image_to_b64
+from api.removeSilence import trim_mp3_b64, trim_mp3_bytes
+from api.utils.converting import (
+    audio_to_mp3_b64,
+    b64_to_audio,
+    b64_to_bytes,
+    b64_to_image,
+    bytes_to_b64,
+    image_to_b64,
+)
 from api.utils.images import (
     fully_process_img,
 )
@@ -93,11 +101,14 @@ async def get_character(
 @app.post("/audio", tags=["process"])
 async def process_audio(mimetype: str, body: AudioBody):
     try:
-        normalized_mp3_b64 = normalize_to_b64(body.base64EncodedAudio, mimetype)
+        audio = b64_to_audio(body.base64EncodedAudio, mimetype)
+        # mp3_bytes = b64_to_bytes(mp3_b64)
+        # mp3_bytes = normalize_bytes(mp3_bytes, mimetype)
+        # mp3_bytes = trim_mp3_bytes(mp3_bytes)
     except Exception as e:
         raise HTTPException(status_code=400, detail=e)
 
-    return AudioBody(base64EncodedAudio=normalized_mp3_b64)
+    return AudioBody(base64EncodedAudio=audio_to_mp3_b64(audio))
 
 
 @app.post("/image", tags=["process"], response_model=ImageBodyOut)
